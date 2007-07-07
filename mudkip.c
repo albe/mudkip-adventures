@@ -15,97 +15,97 @@
 #ifdef DEBUG_CONSOLE
 #include "../../triConsole.h"
 #endif
-
+ 
 #define NOSPLASHES 1
 #undef RELEASE
-
+ 
 PSP_MODULE_INFO("Mudkip Adventures", 0, 1, 1);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_VFPU|PSP_THREAD_ATTR_USER);
-
-
+ 
+ 
 #ifdef RELEASE
 void exception_handler(PspDebugRegBlock *regs){
 	pspDebugScreenInit();
-	
+ 
 	pspDebugScreenSetBackColor(0x00FF0000);
 	pspDebugScreenSetTextColor(0xFFFFFFFF);
 	pspDebugScreenClear();
-
+ 
 	pspDebugScreenPrintf("Exception Details:\n");
 	pspDebugDumpException(regs);
 }
-
+ 
 __attribute__ ((constructor))
 void loaderInit(){
 	pspDebugInstallErrorHandler(exception_handler);
 }
 #endif
-
-
+ 
+ 
 static int isrunning = 1;
-
+ 
 /* Exit callback */
 int exit_callback(int arg1, int arg2, void *common)
 {
 	isrunning = 0;
 	return 0;
 }
-
+ 
 /* Callback thread */
 int CallbackThread(SceSize args, void *argp)
 {
 	int cbid;
-
+ 
 	cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
 	sceKernelRegisterExitCallback(cbid);
 	sceKernelSleepThreadCB();
-
+ 
 	return 0;
 }
-
+ 
 /* Sets up the callback thread and returns its thread id */
 int SetupCallbacks(void)
 {
 	int thid = 0;
-
+ 
 	thid = sceKernelCreateThread("update_thread", CallbackThread,
 				     0x11, 0xFA0, PSP_THREAD_ATTR_USER, 0);
 	if(thid >= 0)
 	{
 		sceKernelStartThread(thid, 0, 0);
 	}
-
+ 
 	return thid;
 }
-
-
+ 
+ 
 /*
 #define MINICHARSET "ABCDEFGHIJKLM12345NOPQRSTUVWXYZ67890"
 #define CHARXOFFS(x) ((n%18)*7)
 #define CHARYOFFS(x) ((n/18)*10)
 */
-
+ 
 #define STATUSSHADOW 0xff9fb6b6
 #define STATUSCOLOR 0xff404040
-
-
+ 
+ 
 #define SIZE_10 0
 #define SIZE_12 1
 #define SIZE_14 2
-
-
+ 
+ 
 static triFont* hollow[3] = { 0 };
 static triFont* solid[3] = { 0 };
 static triFont* verdana10 = 0;
-
-
+ 
+ 
 #ifdef DEBUG_CONSOLE
 CVARF( debugcollisionmap, 1.0 )
 CVARF( unlimitedaqua, 0.0 )
-
+ 
 void spawnenemy( triS32 type, triS32 minlevel, triS32 maxlevel, triS32 dx, triS32 dy );
 void qlevelup();
-
+ 
 triChar* cmd_levelup()
 {
 	triS32 nlevels = 1;
@@ -117,14 +117,14 @@ triChar* cmd_levelup()
 		qlevelup();
 	return(0);
 }
-
+ 
 triChar* cmd_spawn()
 {
 	spawnenemy( rand()%4, 1, 5, 15, 9 );
 	return(0);
 }
 #endif
-
+ 
 void init()
 {
 	SetupCallbacks();
@@ -135,7 +135,7 @@ void init()
 	triFontInit();
 	triWavInit();
 	triAt3Init();
-	
+ 
 	triSInt sz = 10;
 	triSInt tex = 128;
 	triSInt i = 0;
@@ -145,9 +145,9 @@ void init()
 		solid[i] = triFontLoad( "data/solid.ttf", sz, TRI_FONT_SIZE_PIXELS, tex, TRI_FONT_VRAM );
 		if (i==1) tex <<= 1;
 	}
-	
+ 
 	verdana10 = triFontLoad( "data/verdana.ttf", 10, TRI_FONT_SIZE_PIXELS, 128, TRI_FONT_VRAM );
-	
+ 
 	#ifdef DEBUG_CONSOLE
 	triLogPrint("Initiating console...\n");
 	triConsoleInit();
@@ -157,7 +157,7 @@ void init()
 	triCmdRegister( "levelup", cmd_levelup, 0, 0, "One level up", 0 );
 	#endif
 }
-
+ 
 void deinit()
 {
 	#ifdef DEBUG_CONSOLE
@@ -175,8 +175,8 @@ void deinit()
 	triMemoryShutdown();
 	triLogShutdown();
 }
-
-
+ 
+ 
 void fadetocol( triU32 col, triFloat time )
 {
 	triChar* temp = triMalloc( FRAME_BUFFER_SIZE*triBpp );
@@ -199,8 +199,8 @@ void fadetocol( triU32 col, triFloat time )
 	triFree( temp );
 	triSwapbuffers();
 }
-
-
+ 
+ 
 void fadefromcol( triU32 col, triFloat time )
 {
 	triChar* temp = triMalloc( FRAME_BUFFER_SIZE*triBpp );
@@ -224,16 +224,16 @@ void fadefromcol( triU32 col, triFloat time )
 	sceGuTexSync();
 	triSwapbuffers();
 }
-
-
+ 
+ 
 triImage* msgborder = 0;
-
+ 
 triS32 drawmsgbox( triS32 x, triS32 y, triS32 width, triS32 lines, triFont* font, triChar* msg )
 {
 	triS32 i;
-	
+ 
 	triS32 height = 24+(font->fontHeight+3)*lines;
-
+ 
 	triS32 printed = 0;
 	sceGuTexFunc( GU_TFX_REPLACE, GU_TCC_RGBA );
 	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
@@ -246,7 +246,7 @@ triS32 drawmsgbox( triS32 x, triS32 y, triS32 width, triS32 lines, triFont* font
 	triDrawImage( x, y+height-8, 8, 8, 0, 18, 8, 26, msgborder );
 	triDrawImage( x+8, y+height-8, width-16, 8, 9, 18, 17, 26, msgborder );
 	triDrawImage( x+width-8, y+height-8, 8, 8, 18, 18, 26, 26, msgborder );
-
+ 
 	triFontActivate( font );
 	triS32 ln = 0;
 	while (ln<lines)
@@ -285,18 +285,18 @@ triS32 drawmsgbox( triS32 x, triS32 y, triS32 width, triS32 lines, triFont* font
 		triFontPrint( font, x + 12, y + ln*(font->fontHeight+3) + 12, 0x7FFFFFFF, temp );
 		ln++;
 	}
-	
+ 
 	sceGuTexFunc( GU_TFX_REPLACE, GU_TCC_RGBA );
 	sceGuTexFilter(GU_LINEAR, GU_LINEAR);
 	return printed;
 }
-
+ 
 void msgbox( triS32 x, triS32 y, triS32 width, triS32 lines, triFont* font, triS32 ctrl, triChar* msg )
 {
 	triS32 height = 24+(font->fontHeight+3)*lines;
 	triChar* temp = triMalloc( FRAME_BUFFER_SIZE*triBpp );
 	sceGuCopyImage( triPsm, 0, 0, 480, 272, 512, triFramebuffer, 0, 0, 512, temp );
-	
+ 
 	triCopyFromScreen( 0, 0, 480, 272, 0, 0, 512, triFramebuffer );
 	triS32 firstframe = 1;
 	if (ctrl==0) ctrl = PSP_CTRL_CROSS;
@@ -306,7 +306,7 @@ void msgbox( triS32 x, triS32 y, triS32 width, triS32 lines, triFont* font, triS
 		/* TODO: Animate the arrow */
 		if (msg[0]!=0)
 			triDrawImage( x+width-17, y+12, 10, 7,  16, 27, 26, 34, msgborder );
-		
+ 
 		if (ctrl&PSP_CTRL_CROSS)
 			triDrawImage( x+width-14, y+height-14, 16, 16, 0, 26, 16, 41, msgborder );
 		else
@@ -315,7 +315,7 @@ void msgbox( triS32 x, triS32 y, triS32 width, triS32 lines, triFont* font, triS
 		else
 		if (ctrl&PSP_CTRL_SELECT)
 			triDrawImage( x+width-22, y+height-12, 26, 14, 0, 57, 26, 71, msgborder );
-		
+ 
 		triSwapbuffers();
 		if (firstframe)
 		{
@@ -333,28 +333,28 @@ void msgbox( triS32 x, triS32 y, triS32 width, triS32 lines, triFont* font, triS
 	triSwapbuffers();
 	sceKernelDelayThread(250*1000);
 }
-
-
+ 
+ 
 // playfield map
 triU8*	pmap = 0;
 triS32	pwidth = 0;
 triS32	pheight = 0;
-
-
+ 
+ 
 #define DIR_DOWN 0
 #define DIR_UP 1
 #define DIR_LEFT 2
 #define DIR_RIGHT 3
-
-
-
+ 
+ 
+ 
 #define ATTACK_TACKLE 1
 #define ATTACK_BUBBLE 2
 #define ATTACK_SLAP 4
 #define ATTACK_WATERGUN 8
 #define ATTACK_WHIRLPOOL 16
 #define ATTACK_HYDROPUMP 32
-
+ 
 struct
 {
 	triImage*			spritesheet;
@@ -373,11 +373,11 @@ struct
 	triFloat			lx, ly;			// Last x,y
 	triTimer*			timer;
 } player;
-
-
-
+ 
+ 
+ 
 triS32	isgameover = 0;
-
+ 
 void gameover()
 {
 	isgameover = 1;
@@ -385,8 +385,8 @@ void gameover()
 	snprintf( msg, 512, "GAME OVER!\nYou reached up to Level %i. Congratulations!\nHit enemies: %i\nSaved berries: %i", player.level, player.hitenemies, player.berriessaved );
 	msgbox( 120, (272-50)/2, 240, 2, solid[SIZE_10], PSP_CTRL_START, msg );
 }
-
-
+ 
+ 
 typedef struct
 {
 	triImage*			spritesheet;
@@ -394,13 +394,13 @@ typedef struct
 	triFloat			speed;
 	triFloat			hp;
 } enemytype;
-
+ 
 #define MAX_TYPES 2
 enemytype enemytypes[MAX_TYPES] = {	//           HP  AT  DF  SP
 		{ 0, "data/enemy1.png", 1.0f, 2.0f },		// Caterpie: 45  30	 35	 45
 		{ 0, "data/enemy2.png", 2.0f, 1.5f }		// Rattata:  30	 56  35	 72
 		};
-
+ 
 typedef struct
 {
 	triImageAnimation*	ani[4];
@@ -421,21 +421,21 @@ typedef struct
 	triFloat			dx, dy;			// destination x,y
 	triTimer*			timer;
 } enemy;
-
-
+ 
+ 
 #define TARGET_REACH 5.5f
-
+ 
 #define MAP_FREE	0
 #define MAP_UNMOVEABLE	1
 #define MAP_PLAYER	2
 #define MAP_ENEMIES 5
-
+ 
 #define MAX_ENEMIES (256-MAP_ENEMIES)
 enemy enemies[MAX_ENEMIES];
 triS32 enemies_stack[MAX_ENEMIES];
 triS32 enemies_idx = 0;
 triS32 enemies_active = 0;
-
+ 
 void initenemies()
 {
 	triS32 i;
@@ -452,7 +452,7 @@ void initenemies()
 		enemies_stack[i] = i;
 	}
 }
-
+ 
 void deinitenemies()
 {
 	triS32 i;
@@ -465,15 +465,15 @@ void deinitenemies()
 	for (i=0;i<MAX_TYPES;i++)
 		triImageFree( enemytypes[i].spritesheet );
 }
-
-
+ 
+ 
 void spawnenemy( triS32 type, triS32 minlevel, triS32 maxlevel, triS32 dx, triS32 dy )
 {
 	if (enemies_idx>=MAX_ENEMIES || enemies_idx>(triS32)(2.0f*sqrtf(player.level)))
 		return;
-	
+ 
 	enemy* e = &enemies[enemies_stack[enemies_idx]];
-	
+ 
 	e->type = type;
 	e->level = rand()%(maxlevel-minlevel) + minlevel;
 	e->hp = enemytypes[type].hp + e->level*0.1f*enemytypes[type].hp;
@@ -484,7 +484,7 @@ void spawnenemy( triS32 type, triS32 minlevel, triS32 maxlevel, triS32 dx, triS3
 	e->gotberry = 0;
 	e->dx = dx;
 	e->dy = dy;
-
+ 
 	triS32 j;
 	for (j=0;j<4;j++)
 	{
@@ -507,7 +507,7 @@ void spawnenemy( triS32 type, triS32 minlevel, triS32 maxlevel, triS32 dx, triS3
 		else
 			e->direction = DIR_RIGHT;
 	}
-	
+ 
 	switch (e->direction)
 	{
 		case DIR_UP:
@@ -535,7 +535,7 @@ void spawnenemy( triS32 type, triS32 minlevel, triS32 maxlevel, triS32 dx, triS3
 			e->vy = 0.f;
 			break;
 	}
-	
+ 
 	while (pmap[(triS32)e->y*pwidth + (triS32)e->x]!=0)
 	{
 		e->y += e->vy;
@@ -571,7 +571,7 @@ void spawnenemy( triS32 type, triS32 minlevel, triS32 maxlevel, triS32 dx, triS3
 	enemies_idx++;
 	enemies_active++;
 }
-
+ 
 void removeenemy( triS32 idx )
 {
 	if (enemies_idx<=0) return;
@@ -580,12 +580,12 @@ void removeenemy( triS32 idx )
 	triS32 j;
 	for (j=0;j<4;j++)
 		triImageAnimationFree( enemies[enemies_stack[idx]].ani[j] );
-	
+ 
 	triS32 temp = enemies_stack[enemies_idx];
 	enemies_stack[enemies_idx] = enemies_stack[idx];
 	enemies_stack[idx] = temp;
 }
-
+ 
 void hitenemy( triS32 idx, triFloat vx, triFloat vy, triFloat force, triS32 type )
 {
 	enemy* e = &enemies[enemies_stack[idx]];
@@ -619,7 +619,7 @@ void hitenemy( triS32 idx, triFloat vx, triFloat vy, triFloat force, triS32 type
 		}
 	}
 	e->hp -= force*0.1f;
-	
+ 
 	if (e->hp<=0.f)
 	{
 		pmap[(triS32)e->y*pwidth + (triS32)e->x] = MAP_FREE;
@@ -634,13 +634,13 @@ void hitenemy( triS32 idx, triFloat vx, triFloat vy, triFloat force, triS32 type
 		}
 	}
 }
-
+ 
 // An enemy reached the target!
 void reachedtarget()
 {
 	player.berries--;
 }
-
+ 
 triS32 berriesinplay()
 {
 	triS32 berries = player.berries;
@@ -649,11 +649,12 @@ triS32 berriesinplay()
 	{
 		enemy* e = &enemies[enemies_stack[i]];
 		berries += e->gotberry;
+		i++;
 	}
-	
+ 
 	return berries;
 }
-
+ 
 void updateenemies( triFloat dt )
 {
 	triS32 i = 0;
@@ -668,11 +669,11 @@ void updateenemies( triFloat dt )
 			triTimerUpdate( e->timer );
 			e->lx = e->x;
 			e->ly = e->y;
-			
+ 
 			triS32 dir = rand()%4;
 			triS32 lastdir = dir;
 			triFloat lastdist = ((triS32)e->x-e->dx)*((triS32)e->x-e->dx) + ((triS32)e->y-e->dy)*((triS32)e->y-e->dy);
-			
+ 
 			if (e->freeze>0)
 			{
 				e->freeze--;
@@ -684,7 +685,7 @@ void updateenemies( triFloat dt )
 				i++;
 				continue;
 			}
-			
+ 
 			while (1)
 			{
 				e->x = e->lx;
@@ -699,7 +700,7 @@ void updateenemies( triFloat dt )
 					e->x -= 1.0f;
 				else
 					e->x += 1.0f;
-				
+ 
 				triFloat dist = (e->x-e->dx)*(e->x-e->dx) + (e->y-e->dy)*(e->y-e->dy);
 				if (e->run==1 && dist>lastdist && (e->x<0 || e->x>=pwidth || e->y<0 || e->y>=pheight || pmap[(triS32)e->y*pwidth+(triS32)e->x]==MAP_UNMOVEABLE))
 				{
@@ -707,16 +708,16 @@ void updateenemies( triFloat dt )
 					// Enemy got away!
 					break;
 				}
-
+ 
 				/*if (e->x<0) e->x = 0.f;
 				if (e->x>=pwidth) e->x = pwidth-1;
 				if (e->y<0) e->y = 0.f;
 				if (e->y>=pheight) e->y = pheight-1;*/
 				dist = (e->x-e->dx)*(e->x-e->dx) + (e->y-e->dy)*(e->y-e->dy);
-				
+ 
 				if ((e->x>=0 && e->x<pwidth && e->y>=0 && e->y<pheight) && ((e->run==0 && dist<=lastdist) || (e->run==1 && dist>=lastdist)) && pmap[(triS32)e->y*pwidth+(triS32)e->x]==MAP_FREE)
 					break;
-				
+ 
 				dir = (dir+1)%4;
 				if (dir==lastdir)	// We tried all four possible directions and could not find a good one? (trapped!)
 				{
@@ -756,8 +757,8 @@ void updateenemies( triFloat dt )
 		i++;
 	}
 }
-
-
+ 
+ 
 void renderenemies( triS32 csx, triS32 csy )
 {
 	triS32 i = 0;
@@ -767,36 +768,36 @@ void renderenemies( triS32 csx, triS32 csy )
 		triFloat lerp = triTimerPeekDeltaTime( e->timer );
 		if (lerp==0) lerp = 1.0f / e->speed;
 		triDrawImageAnimation( (triS32)((e->lx + (e->x-e->lx)*lerp*e->speed)*csx - (32-csx)/2), (triS32)((e->ly + (e->y-e->ly)*lerp*e->speed)*csy - (24-csy)), e->ani[e->direction] );
-
+ 
 		triFontActivate( verdana10 );
 		triFontPrintf( verdana10, (triS32)((e->lx + (e->x-e->lx)*lerp*e->speed)*csx), (triS32)((e->ly + (e->y-e->ly)*lerp*e->speed)*csy), 0xFFFFFFFF, "%.1f/%i/%i", e->hp, e->freeze, e->wait );
 		triImageAnimationUpdate( e->ani[e->direction] );
 		i++;
 	}
 }
-
-
+ 
+ 
 typedef struct
 {
 	triImage*			img;
 	triS32				ix,iy,dx,dy;
 	triS32				type;
-	
+ 
 	triFloat			force;
 	triFloat			x, y;
 	triFloat			vx, vy;
 } particle;
-
-
+ 
+ 
 #define MAX_PARTICLES 512
 particle bubbles[MAX_PARTICLES];
 triS32 bubbles_stack[MAX_PARTICLES];
 particle water[MAX_PARTICLES];
 triS32 water_stack[MAX_PARTICLES];
-
+ 
 triS32 bubbles_idx = 0;
 triS32 water_idx = 0;
-
+ 
 void initparticles()
 {
 	triS32 i;
@@ -806,7 +807,7 @@ void initparticles()
 		water_stack[i] = i;
 	}
 }
-
+ 
 void hitobject( triS32 n, particle* p )
 {
 	if (n>=MAP_ENEMIES)
@@ -817,22 +818,22 @@ void hitobject( triS32 n, particle* p )
 	p->vx = -p->vx*0.05f + (rand()%3-1)*p->vy*0.05f;
 	p->vy = -p->vy*0.05f + (rand()%3-1)*p->vx*0.05f;
 }
-
-
+ 
+ 
 void addbubble( triImage* img, triFloat dx, triS32 i )
 {
 	if (bubbles_idx>=MAX_PARTICLES)
 		return;
-	
+ 
 	triS32 idx = bubbles_stack[bubbles_idx++];
-	
+ 
 	bubbles[idx].type = ATTACK_BUBBLE;
 	bubbles[idx].img = img;
 	bubbles[idx].ix = (i%3) * (img->width/3);
 	bubbles[idx].iy = 0;
 	bubbles[idx].dx = bubbles[idx].ix + (img->width/3);
 	bubbles[idx].dy = img->height;
-	
+ 
 	bubbles[idx].force = 0.5f +  player.level*0.1f;
 	bubbles[idx].x = (triS32)player.x;
 	bubbles[idx].y = (triS32)player.y;
@@ -874,12 +875,12 @@ void addbubble( triImage* img, triFloat dx, triS32 i )
 		hitobject( obj, &bubbles[idx] );
 	}
 }
-
+ 
 void addwater( triImage* img )
 {
 	if (water_idx>=MAX_PARTICLES)
 		return;
-	
+ 
 	triS32 idx = water_stack[water_idx++];
 	water[idx].type = ATTACK_WATERGUN;
 	water[idx].img = img;
@@ -887,7 +888,7 @@ void addwater( triImage* img )
 	water[idx].iy = 0;
 	water[idx].dx = water[idx].ix + (img->width/3);
 	water[idx].dy = img->height;
-	
+ 
 	water[idx].force = 10.0f + player.level;
 	water[idx].x = player.x;
 	water[idx].y = player.y;
@@ -909,8 +910,8 @@ void addwater( triImage* img )
 			break;
 	}
 }
-
-
+ 
+ 
 void removebubble( triS32 idx )
 {
 	if (bubbles_idx<=0) return;
@@ -919,7 +920,7 @@ void removebubble( triS32 idx )
 	bubbles_stack[bubbles_idx] = bubbles_stack[idx];
 	bubbles_stack[idx] = temp;
 }
-
+ 
 void removewater( triS32 idx )
 {
 	if (water_idx<=0) return;
@@ -928,13 +929,13 @@ void removewater( triS32 idx )
 	water_stack[water_idx] = water_stack[idx];
 	water_stack[idx] = temp;
 }
-
-
+ 
+ 
 void updateparticles( triFloat dt )
 {
 	if (bubbles_idx==0 && water_idx==0) return;
 	triS32 i = 0;
-	
+ 
 	while (i<bubbles_idx)
 	{
 		particle* p = &bubbles[bubbles_stack[i]];
@@ -944,7 +945,7 @@ void updateparticles( triFloat dt )
 			removebubble( i );
 			continue;
 		}
-
+ 
 		triFloat nx = p->x + p->vx*dt;
 		triFloat ny = p->y + p->vy*dt;
 		if (nx < 0.f || nx >= pwidth || ny < 0.f || ny >= pheight)
@@ -965,12 +966,12 @@ void updateparticles( triFloat dt )
 		i++;
 	}
 }
-
+ 
 void renderparticles( triS32 csx, triS32 csy )
 {
 	if (bubbles_idx==0 && water_idx==0) return;
 	triS32 i = 0;
-	
+ 
 	while (i<bubbles_idx)
 	{
 		particle* p = &bubbles[bubbles_stack[i]];
@@ -978,7 +979,7 @@ void renderparticles( triS32 csx, triS32 csy )
 		triDrawImage( (triS32)(p->x*csx), (triS32)(p->y*csy), p->img->width/3, p->img->height, p->ix+0.5f, p->iy+0.5f, p->dx, p->dy, p->img );
 		i++;
 	}
-	
+ 
 	i = 0;
 	while (i<water_idx)
 	{
@@ -988,20 +989,20 @@ void renderparticles( triS32 csx, triS32 csy )
 		i++;
 	}
 }
-
-
+ 
+ 
 triS32 raiselevel()
 {
 	if (player.level>=99) return 0;
-	
+ 
 	player.exp -= player.level*10.f;
 	if (player.exp<0.f) player.exp = 0.f;
 	player.hp += 2;
-	
+ 
 	player.level++;
 	return 1;
 }
-
+ 
 void learnattacks()
 {
 	if (player.level==5)
@@ -1030,40 +1031,40 @@ void learnattacks()
 		msgbox( 120, (272-50)/2, 240, 2, solid[SIZE_10], PSP_CTRL_START, "Learned a new attack!\nHYDROPUMP" );
 	}
 }
-
+ 
 void levelup()
 {
 	if (raiselevel())
 		msgbox( 120, (272-50)/2, 240, 2, solid[SIZE_10], PSP_CTRL_START, "Level up!\nYou are stronger now and can deal more damage. Also, you get more aqua points and they regenerate faster." );
 	learnattacks();
 }
-
+ 
 void qlevelup()
 {
 	raiselevel();
 	learnattacks();
 }
-
-
+ 
+ 
 void main_loop()
 {
 	// Copy frontbuffer -> backbuffer
 	triCopyFromScreen( 0, 0, 480, 272, 0, 0, 512, triFramebuffer );
 	drawmsgbox( (480-240)/2, (272-34)/2, 240, 1, solid[SIZE_10], "Loading..." );
 	triSwapbuffers();
-	
+ 
 	initparticles();
 	initenemies();
-	
+ 
 	triS32 i;
 	triImage* bubbles = triImageLoad( "data/bubbles.png", TRI_VRAM|TRI_SWIZZLE );
 	if (bubbles==0)
 		return;
-	
+ 
 	triImage* status = triImageLoad( "data/statusbar.png", TRI_VRAM|TRI_SWIZZLE );
 	if (status==0)
 		return;
-	
+ 
 	player.spritesheet = triImageLoad( "data/mudkip_spritesheet.png", TRI_VRAM|TRI_SWIZZLE );
 	if (player.spritesheet==0)
 		return;
@@ -1081,7 +1082,7 @@ void main_loop()
 	player.direction = 0;
 	player.speed = 0;
 	player.timer = triTimerCreate();
-	
+ 
 	triImage* background = triImageLoad( "data/grassland.png", TRI_VRAM|TRI_SWIZZLE );
 	triImage* foreground = triImageLoad( "data/grassland_layer2.png", TRI_VRAM|TRI_SWIZZLE );
 	triImage* collision = triImageLoad( "data/grassland_collision.png", 0 );
@@ -1096,15 +1097,15 @@ void main_loop()
 		return;
 	}
 	triChar* cmap = (triChar*)collision->data;
-	
+ 
 	triS32 csx = 480 / collision->width;
 	triS32 csy = 272 / collision->height;
 	triFloat speedfactor = 16.f / csx;
-	
+ 
 	triLogPrint("csx: %i\ncsy: %i\n", csx, csy );
 	player.x = player.lx = 240.f * collision->width / 480.f;
 	player.y = player.ly = 192.f * collision->height / 272.f;
-	
+ 
 	pwidth = collision->width;
 	pheight = collision->height;
 	pmap = triMalloc( pwidth*pheight );
@@ -1114,24 +1115,24 @@ void main_loop()
 		return;
 	}
 	memset( pmap, 0, pwidth*pheight );
-	
+ 
 	triS32 xx, yy;
 	for (yy=0;yy<pheight;yy++)
 	for (xx=0;xx<pwidth;xx++)
 		pmap[yy*pwidth+xx] = !cmap[yy*collision->stride+xx];
-
+ 
 	triImagePaletteSet( collision, 0, 0xFF, 0xFF, 0xFF, 0xFF );
 	triImagePaletteSet( collision, 1, 0x00, 0x00, 0x00, 0xFF );
 	triImagePaletteSet( collision, 2, 0x00, 0x00, 0xFF, 0xFF );
 	for (yy=MAP_ENEMIES;yy<256;yy++)
 		triImagePaletteSet( collision, yy, 0xFF, 0x00, 0x00, 0xFF );
-
+ 
 	while (pmap[(triS32)player.y*pwidth + (triS32)player.x]!=0)
 	{
 		player.y += 1.0f;
 	}
 	triLogPrint("Placed player.\n");
-
+ 
 	triS32 firstframe = 1;
 	triFloat ymin = -(background->height-272);
 	if (ymin>0) ymin = 0.f;
@@ -1140,7 +1141,7 @@ void main_loop()
 	{
 		triDrawImage2( 0, y, background );
 		triDrawImageAnimation( player.x*csx - (20-csx)/2, player.y*csy - (27-csy) + (background->height-272) + y, player.ani[player.direction] );
-	
+ 
 		if (firstframe)
 		{
 			firstframe = 0;
@@ -1148,22 +1149,22 @@ void main_loop()
 			fadefromcol( 0xFFFFFF, 1.0f );
 			continue;
 		}
-		
+ 
 		y -= 0.5f;
 		triSwapbuffers();
 	}
 	y = ymin;
-	
+ 
 	msgbox( (480-240)/2, (272-64)/2, 240, 3, solid[SIZE_10], PSP_CTRL_CROSS, "Stage 1: Save your food!\nWild Pokemon are trying to steal your collected food, so you have to keep them away. If they get near your berries, they will steal them and try to run away, but you can still get the berry back before they get out of reach!\nMove with the D-Pad and press the round buttons to use your attacks." );
-	
+ 
 	triTimer* frametimer = triTimerCreate();
 	if (frametimer==0)
 	{
 		triLogPrint("Error creating frame timer!\n");
 		return;
 	}
-	return;
-	
+	//return;
+ 
 	while(isrunning && !isgameover)
 	{
 		triDrawImage2( 0, y, background );
@@ -1171,7 +1172,7 @@ void main_loop()
 		if (lerp==0) lerp = 0.15f;
 		triDrawImageAnimation( (triS32)((player.lx + (player.x-player.lx)*lerp/0.15f)*csx - (20-csx)/2), (triS32)((player.ly + (player.y-player.ly)*lerp/0.15f)*csy - (27-csy)), player.ani[player.direction] );
 		triDrawImage2( 0, y, foreground );
-		
+ 
 		#ifdef DEBUG_CONSOLE
 		if (triCVarGetf( "debugcollisionmap" )!=0.0f)
 		{
@@ -1188,7 +1189,7 @@ void main_loop()
 		#endif
 		renderenemies( csx, csy );
 		renderparticles( csx, csy );
-		
+ 
 		triDrawImage( 480-112, 0, 111, 39,  1, 1, 112, 40, status );
 		triFloat hp = player.hp / (3.f + player.level*2.f);
 		if (hp>1.0f) hp = 1.0f;
@@ -1205,13 +1206,13 @@ void main_loop()
 		triFontPrintf( verdana10, 480-112+83, 5, STATUSCOLOR, "%i", player.level );
 		triFontPrintf( verdana10, 480-112+16, 18, STATUSSHADOW, "%i", player.berries );
 		triFontPrintf( verdana10, 480-112+15, 17, STATUSCOLOR, "%i", player.berries );
-		
+ 
 		triFontActivate( solid[SIZE_10] );
 		triFontPrintf( solid[SIZE_10], 1, 1, 0xFF000000, "enemies: %i\n", enemies_active );
 		triFontPrintf( solid[SIZE_10], 0, 0, 0xFFFFFFFF, "enemies: %i\n", enemies_active );
-		
+ 
 		triImageAnimationUpdate( player.ani[player.direction] );
-		
+ 
 		triInputUpdate();
 		if (lerp>=0.15f)
 		{
@@ -1315,20 +1316,20 @@ void main_loop()
 					}
 				}
 			}
-			
+ 
 			player.ap+=(0.9f+player.level*0.2f);	// at level 21 ap is renegerated as fast as bubble consumes
 			if (player.ap>(48+2*player.level)) 
 				player.ap=(48+2*player.level);
-			
+ 
 			if ((triS32)((rand()%MAX_ENEMIES)*40*lerp)>0)
 				spawnenemy( rand()%MAX_TYPES, player.level-2>0?player.level-2:1, player.level+5, 15, 9 );
 		}
 		if(triImageAnimationIsDone( player.ani[player.direction]))
 			triImageAnimationReset( player.ani[player.direction] );
-		
-
+ 
+ 
 		#ifdef DEBUG_CONSOLE
-		triConsoleUpdate();		
+		triConsoleUpdate();
 		if (triInputHeld(PSP_CTRL_SELECT) && triInputHeld(PSP_CTRL_LTRIGGER) && triInputHeld(PSP_CTRL_RTRIGGER))
 			triConsoleToggle();
 		else
@@ -1341,20 +1342,20 @@ void main_loop()
 		{
 			gameover();
 		}
-		
+ 
 		triTimerUpdate( frametimer );
 		updateparticles( triTimerGetDeltaTime( frametimer ) );
 		updateenemies( triTimerGetDeltaTime( frametimer ) );
-		
+ 
 		if (berriesinplay()==0)
 			gameover();
-		
+ 
 		if (player.exp>=player.level*10.0f)
 			levelup();
-		
+ 
 		triSwapbuffers();
 	}
-	
+ 
 	pmap = 0;
 	triImageFree( collision );
 	triImageFree( bubbles );
@@ -1375,8 +1376,8 @@ void startgame()
 {
 	main_loop();
 }
-
-
+ 
+ 
 #define NUM_CREDITS_LINES 51
 triChar* Credits[NUM_CREDITS_LINES] =
 		{
@@ -1384,33 +1385,74 @@ triChar* Credits[NUM_CREDITS_LINES] =
 "              A game made in 72 hours.",
 "",
 "",
-"Game code:   Raphael","","Game engine: Tomaz","              Raphael","              InsertWittyName","","Graphics: www.spriters-resource.com","","Sounds: some free wav archive","","","","Thanks: Guys from psp-programming.com","         for the idea","         esp \"Mudkip-natic\" Ryalla :P",
+"Game code:   Raphael",
+"",
+"Game engine: Tomaz",
+"              Raphael",
+"              InsertWittyName",
+"",
+"Graphics: www.spriters-resource.com",
+"",
+"Sounds: some free wav archive",
+"",
+"",
+"",
+"Thanks: Guys from psp-programming.com",
+"         for the idea",
+"         esp \"Mudkip-natic\" Ryalla :P",
 "         and Zettablade for finding the",
-"         sprites","","         All of ps2dev.org for making","         this possible at all.","","         TyRaNiD for PSPLink - couldn’t","         imagine coding on PSP without","","         My loving girlfriend who’s having","         some hard time with my coding","         madness ;) I love you","","","Greets: The rest of psp-programming.com","         ps2dev.org folks","         Anyone that dedicated some of his","         time for the PSP-Scene","",         "","","         ...not the QJ-noobs :P","", "","First release: gbax‘07 coding competition","","","This is free software. Any selling or renting","is strictly prohibited.",
+"         sprites",
+"",
+"         All of ps2dev.org for making",
+"         this possible at all.",
+"",
+"         TyRaNiD for PSPLink - couldn’t",
+"         imagine coding on PSP without",
+"",
+"         My loving girlfriend who’s having",
+"         some hard time with my coding",
+"         madness ;) I love you",
+"",
+"",
+"Greets: The rest of psp-programming.com",
+"         ps2dev.org folks",
+"         Anyone that dedicated some of his",
+"         time for the PSP-Scene",
+"",         
+"",
+"",
+"         ...not the QJ-noobs :P",
+"", 
+"",
+"First release: gbax‘07 coding competition",
+"",
+"",
+"This is free software. Any selling or renting",
+"is strictly prohibited.",
 "If you paid for this, bad luck for you!",
 "",
 "Thanks for playing."
 		};
-
+ 
 void credits()
 {
 	triS32 fontsize = SIZE_14;
 	triFont* font = solid[fontsize];
 	if (font==0) return;
-	
+ 
 	triImage* background = triImageLoad( "data/menuback.png", /*TRI_VRAM|*/TRI_SWIZZLE );
 	triImage* title = triImageLoad( "data/title.png", /*TRI_VRAM|*/TRI_SWIZZLE );
 	if (background==0 || title==0) return;
-	
+ 
 	triFloat y = 280.0f;
 	triDrawImage2( 0, 0, background );
 	triDrawImage( (480-title->width)*0.5f, y, title->width, title->height,
 					0.5f, 0.5f, title->width-0.5f, title->height-0.5f, title );
-	
+ 
 	triFloat x = 240 - triFontMeasureText( font, Credits[0] )*0.5f;
 	triFloat ty = y + title->height + 10.f;
 	triS32 line = 0;
-
+ 
 	triFontActivate( font );
 	while (ty<272.f && line<NUM_CREDITS_LINES)
 	{
@@ -1424,20 +1466,20 @@ void credits()
 	}
 	triSync();
 	fadefromcol( 0xFFFFFF, 1.0f );
-	
-	
+ 
+ 
 	triFloat lasty = 0;
 	while (lasty>-60.f && isrunning)
 	{
 		y -= 0.5f;
 		sceGuTexFunc( GU_TFX_REPLACE, GU_TCC_RGBA );
 		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
-		
+ 
 		triDrawImage2( 0, 0, background );
 		if (y > -title->height)
 			triDrawImage( (480-title->width)*0.5f, y, title->width, title->height,
 						0.5f, 0.5f, title->width-0.5f, title->height-0.5f, title );
-		
+ 
 		triFloat ty = y + title->height + 10.f;
 		triS32 line = 0;
 		while (ty<-font->fontHeight && line<NUM_CREDITS_LINES)
@@ -1445,7 +1487,7 @@ void credits()
 			line++;
 			ty += font->fontHeight;
 		}
-		
+ 
 		triFontActivate( font );
 		while (ty<272.f && line<NUM_CREDITS_LINES)
 		{
@@ -1465,14 +1507,14 @@ void credits()
 	}
 	sceGuTexFunc( GU_TFX_REPLACE, GU_TCC_RGBA );
 	sceGuTexFilter(GU_LINEAR, GU_LINEAR);
-	
+ 
 	triImageFree( background );
 	triImageFree( title );
 	if (isrunning)
 		fadetocol( 0xFFFFFF, 1.0f );
 }
-
-
+ 
+ 
 void splash( triChar* filename )
 {
 	triImage* splash = triImageLoad( filename, TRI_SWIZZLE|TRI_VRAM );
@@ -1483,22 +1525,22 @@ void splash( triChar* filename )
 	sceKernelDelayThread( 25*100*1000 );
 	fadetocol( 0, 1.0f );
 }
-
-
+ 
+ 
 void intro()
 {
 	#ifndef NOSPLASHES
 	splash( "data/PSP-2_rokdcasbah.png" );
 	splash( "data/archprod.png" );
 	#endif
-	
+ 
 	if (!triAt3Load( "data/ustv.at3" ))
 	{
 		triLogPrint("Error loading background music!\n");
 		return;
 	}
 	triAt3SetLoop( 1 );
-	
+ 
 	triImage* background = triImageLoad( "data/menuback.png", /*TRI_VRAM|*/TRI_SWIZZLE );
 	triImage* mudkip1 = triImageLoad( "data/mudkip.png", TRI_SWIZZLE );
 	triImage* mudkip2 = triImageLoad( "data/mudkip2.png", TRI_SWIZZLE );
@@ -1508,24 +1550,24 @@ void intro()
 		triLogPrint("Error loading menuscreen images!\n");
 		return;
 	}
-	
+ 
 	triImage* menum = triImageLoad( "data/menu.png", /*TRI_VRAM|*/TRI_SWIZZLE );
 	if (menum==0)
 	{
 		triLogPrint("Error loading menu item images!\n");
 		return;
 	}
-	
+ 
 	msgborder = triImageLoad( "data/msgborder.png", TRI_VRAM|TRI_SWIZZLE );
 	if (menum==0)
 	{
 		triLogPrint("Error loading message border image!\n");
 		return;
 	}
-	
+ 
 	triWav* select = triWavLoad( "data/start.wav" );
 	triWav* click = triWavLoad( "data/click.wav" );
-	
+ 
 	triS32 first = 1;
 	while (isrunning)
 	{
@@ -1535,7 +1577,7 @@ void intro()
 		triEnable(TRI_VBLANK);
 		triTimer* timer = triTimerCreate();
 		triS32 i = 0;
-		
+ 
 		triAt3Play();
 		while (isrunning)
 		{
@@ -1561,8 +1603,8 @@ void intro()
 							0.5f, i*80+0.5f, menum->width-0.5f, i*80+40-0.5f, menum );
 				}
 			}
-			
-			
+ 
+ 
 			if (first==1)
 			{
 				triSync();
@@ -1580,8 +1622,8 @@ void intro()
 				triTimerUpdate( timer );
 				first = 0;
 			}
-			
-			
+ 
+ 
 			triInputUpdate();
 			if (triInputPressed(PSP_CTRL_UP))
 			{
@@ -1602,23 +1644,23 @@ void intro()
 				sceKernelDelayThread(500000);
 				break;
 			}
-
+ 
 			triSwapbuffers();
 			titlescale = 1.0f + 0.05f*sinf( triTimerPeekDeltaTime(timer) * M_PI * 0.5f );
 		}
-		
+ 
 		triTimerFree( timer );
-
+ 
 		if (!isrunning || menuitem==2)
 			break;
-
+ 
 		if (menuitem==1)
 		{
 			fadetocol( 0xFFFFFF, 1.0f );
 			credits();
 			first = 2;
 		}
-		
+ 
 		if (menuitem==0)
 		{
 			// Unload unneeded data for the main game
@@ -1635,12 +1677,12 @@ void intro()
 			first = 2;
 		}
 	}
-	
+ 
 	triWavStopAll();
 	triWavFree( select );
 	triWavFree( click );
 	triImageFree( menum );
-	
+ 
 	triImageFree( background );
 	triImageFree( mudkip1 );
 	triImageFree( mudkip2 );
@@ -1648,8 +1690,8 @@ void intro()
 	triImageFree( msgborder );
 	triAt3Free();
 }
-
-
+ 
+ 
 int main(int argc, char *argv[])
 {
 	init();
