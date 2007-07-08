@@ -17,30 +17,10 @@
 #endif
 
 //#define NOSPLASHES 0
-//#define RELEASE
+#define RELEASE
 
 PSP_MODULE_INFO("Mudkip Adventures", 0, 1, 1);
 PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_VFPU|PSP_THREAD_ATTR_USER);
-
-
-#ifdef RELEASE
-void exception_handler(PspDebugRegBlock *regs){
-	pspDebugScreenInit();
-	
-	pspDebugScreenSetBackColor(0x00FF0000);
-	pspDebugScreenSetTextColor(0xFFFFFFFF);
-	pspDebugScreenClear();
-
-	pspDebugScreenPrintf("Exception Details:\n");
-	pspDebugDumpException(regs);
-}
-
-__attribute__ ((constructor))
-void loaderInit(){
-	pspDebugInstallErrorHandler(exception_handler);
-}
-#endif
-
 
 static int isrunning = 1;
 
@@ -458,14 +438,28 @@ void initenemies()
 
 void deinitenemies()
 {
+	triLogPrint("Here\r\n");
 	triS32 i;
 	for (i=0;i<enemies_idx;i++)
 	{
 		triS32 j;
 		for (j=0;j<4;j++)
-			triImageAnimationFree( enemies[enemies_stack[i]].ani[j] );
+		{
+			triImageAnimation* img = &enemies[enemies_stack[i]].ani[j];
+			//triImageAnimationFree( enemies[enemies_stack[i]].ani[j] );
+			if (img->palette!=0) triFree(img->palette);
+			triImageList *next = 0;
+			while (img->frames!=0)
+			{
+				next = img->frames->next;
+				triFree( img->frames );
+				img->frames = next;
+			}
+			triFree(img);
+		}
 		triTimerFree( enemies[enemies_stack[i]].timer );
 	}
+	triLogPrint("Here2\r\n");
 	for (i=0;i<MAX_TYPES;i++)
 		triImageFree( enemytypes[i].spritesheet );
 }
@@ -769,12 +763,15 @@ void renderenemies( triS32 csx, triS32 csy )
 	while(i<enemies_idx)
 	{
 		enemy* e = &enemies[enemies_stack[i]];
-		triFloat lerp = triTimerPeekDeltaTime( e->timer );
-		if (lerp==0) lerp = 1.0f / e->speed;
-		triDrawImageAnimation( (triS32)((e->lx + (e->x-e->lx)*lerp*e->speed)*csx - (32-csx)/2), (triS32)((e->ly + (e->y-e->ly)*lerp*e->speed)*csy - (24-csy)), e->ani[e->direction] );
+		triFloat lerp = triTimerPeekDeltaTime( e->timer ) * e->speed;
+		triFloat ex = (e->lx + (e->x-e->lx)*lerp)*csx;
+		triFloat ey = (e->ly + (e->y-e->ly)*lerp)*csy;
+		triS32 exx = (triS32)ex;
+		triS32 eyy = (triS32)ey;
+		triDrawImageAnimation( (exx - (32-csx)/2), (eyy - (24-csy)), e->ani[e->direction] );
 
 		triFontActivate( verdana10 );
-		triFontPrintf( verdana10, (triS32)((e->lx + (e->x-e->lx)*lerp*e->speed)*csx), (triS32)((e->ly + (e->y-e->ly)*lerp*e->speed)*csy), 0xFFFFFFFF, "%.1f", e->hp/*, e->freeze, e->wait*/ );
+		triFontPrintf( verdana10, exx, (eyy + 7), 0xFFFFFFFF, "%.1f", e->hp/*, e->freeze, e->wait*/ );
 		triImageAnimationUpdate( e->ani[e->direction] );
 		i++;
 	}
@@ -1361,6 +1358,7 @@ void main_loop()
 	}
 	
 	triFree( pmap );
+	isgameover = 0;
 	pmap = 0;
 	triImageFree( collision );
 	triImageFree( bubbles );
@@ -1391,9 +1389,50 @@ triChar* Credits[NUM_CREDITS_LINES] =
 "              A game made in 72 hours.",
 "",
 "",
-"Game code:   Raphael","","Game engine: Tomaz","              Raphael","              InsertWittyName","","Graphics: www.spriters-resource.com","","Sounds: some free wav archive","","","","Thanks: Guys from psp-programming.com","         for the idea","         esp \"Mudkip-natic\" Ryalla :P",
+"Game code:   Raphael",
+"",
+"Game engine: Tomaz",
+"              Raphael",
+"              InsertWittyName",
+"",
+"Graphics: www.spriters-resource.com",
+"",
+"Sounds: some free wav archive",
+"",
+"",
+"",
+"Thanks: Guys from psp-programming.com",
+"         for the idea",
+"         esp \"Mudkip-natic\" Ryalla :P",
 "         and Zettablade for finding the",
-"         sprites","","         All of ps2dev.org for making","         this possible at all.","","         TyRaNiD for PSPLink - couldn’t","         imagine coding on PSP without","","         My loving girlfriend who’s having","         some hard time with my coding","         madness ;) I love you","","","Greets: The rest of psp-programming.com","         ps2dev.org folks","         Anyone that dedicated some of his","         time for the PSP-Scene","",         "","","         ...not the QJ-noobs :P","", "","First release: gbax‘07 coding competition","","","This is free software. Any selling or renting","is strictly prohibited.",
+"         sprites",
+"",
+"         All of ps2dev.org for making",
+"         this possible at all.",
+"",
+"         TyRaNiD for PSPLink - couldn’t",
+"         imagine coding on PSP without",
+"",
+"         My loving girlfriend who’s having",
+"         some hard time with my coding",
+"         madness ;) I love you",
+"",
+"",
+"Greets: The rest of psp-programming.com",
+"         ps2dev.org folks",
+"         Anyone that dedicated some of his",
+"         time for the PSP-Scene",
+"",         
+"",
+"",
+"         ...not the QJ-noobs :P",
+"", 
+"",
+"First release: gbax‘07 coding competition",
+"",
+"",
+"This is free software. Any selling or renting",
+"is strictly prohibited.",
 "If you paid for this, bad luck for you!",
 "",
 "Thanks for playing."

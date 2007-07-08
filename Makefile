@@ -6,7 +6,7 @@ OBJS = mudkip.o ../../triAudioLib.o ../../triAt3.o ../../triWav.o ../../streams/
        ../../triTimer.o
 
 INCDIR = 
-CFLAGS = -O3 -G0 -Wall -Wfatal-errors -DTRI_SUPPORT_PNG -D__PSP__ -g -DDEBUG -D_DEBUG -D_DEBUG_LOG -D_DEBUG_MEMORY
+CFLAGS = -O3 -G0 -Wall -Wfatal-errors -DTRI_SUPPORT_PNG -D__PSP__ #-g -DDEBUG -D_DEBUG -D_DEBUG_LOG -D_DEBUG_MEMORY
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS = $(CFLAGS)
 
@@ -25,4 +25,3 @@ PSP_EBOOT_TITLE = Mudkip Adventures
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
-

@@ -1,4 +1,4 @@
-Mudkip Adventures (rc1)
+Mudkip Adventures
 
 A game made in 72 hours.
 
@@ -30,7 +30,7 @@ you knocked out the enemy completely before it can escape.
 
 Lv      - The level you are at. Possible range 1 - 99. For every level you gain more
           strength, healt points and aqua points and regenerate aqua points faster.
-HP      - Health points. How many damage you can take.
+HP      - Health points. How many damage you can take (has no relevance in this game ;P)
 AP      - Aqua points. How many water you have available to use for water-type attacks.
 Berries - How many berries you still have. Game is over if you have no berries and
           all Pokemon carrying one have escaped.
@@ -39,11 +39,13 @@ Berries - How many berries you still have. Game is over if you have no berries a
 
 3. Attacks
 
-X:   Tackle - Deal some damage and move the enemy back. 66% chance for enemy to lose berry.
-O:   Bubble - Deal little damage. 33% chance to 'freeze' the enemy for some time. Uses few aqua points.
-[]:  Watergun - Deal good damage and move the enemy back a little. 33% chance for enemy to lose berry. Uses some aqua points.
-L/R: Slap - Deal good damage and move enemy to the side. 66% chance for enemy to lose berry.
-/\:  Waterpump - Deal big damage and move the enemy back. 66% chance for enemy to lose berry. Uses many aqua points.
+X:   Bubble - Deal little damage. 33% chance to 'freeze' the enemy for some time. Uses few aqua points.
+
+Yep - only one made it into the compo release, because a 'last-minute' bug kept me busy for the last 5 hours
+where I was starting to add the other attacks that were planned. I at least hoped I'd get the tackle
+still done, but it wasn't possible because the game constantly hung up at the start so I couldn't try
+out anything.
+Later versions of the game will contain other attacks though and should make it more fun to play.
 
 
 
@@ -51,8 +53,6 @@ L/R: Slap - Deal good damage and move enemy to the side. 66% chance for enemy to
 
 - Sometimes the Pokemon just disappear when they catched a berry
 - Sometimes the Pokemon get stuck at places
-- Very rarely and totally random the game just hangs up at places (majorly while loading or when game starting)
-  without any real reason (No, there are no infinite loops, especially not at the places where it hangs)
 
 
 
