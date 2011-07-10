@@ -109,6 +109,7 @@ void init()
 {
 	SetupCallbacks();
 	triInit(GU_PSM_8888);
+	triEnable(TRI_VBLANK);
 	triInputInit();
 	triMemoryInit();
 	triLogInit();
@@ -245,7 +246,7 @@ triS32 drawmsgbox( triS32 x, triS32 y, triS32 width, triS32 lines, triFont* font
 				lastchar++;
 				break;
 			}
-			if (msg[lastchar]==' ' || msg[lastchar]=='-')
+			if (msg[lastchar]==' ' || msg[lastchar]=='-' || msg[lastchar]=='.' || msg[lastchar]==',')
 				lastword = lastchar+1;
 			chr[0] = msg[lastchar++];
 			txtwidth += triFontMeasureText( font, chr );
@@ -434,20 +435,21 @@ void initenemies()
 	{
 		enemies_stack[i] = i;
 	}
+	enemies_idx = 0;
 }
 
 void deinitenemies()
 {
-	triLogPrint("Here\r\n");
 	triS32 i;
 	for (i=0;i<enemies_idx;i++)
 	{
 		triS32 j;
 		for (j=0;j<4;j++)
 		{
-			triImageAnimation* img = &enemies[enemies_stack[i]].ani[j];
-			//triImageAnimationFree( enemies[enemies_stack[i]].ani[j] );
-			if (img->palette!=0) triFree(img->palette);
+			triImageAnimation* img = enemies[enemies_stack[i]].ani[j];
+			img->data = 0;
+			triImageAnimationFree( enemies[enemies_stack[i]].ani[j] );
+			/*if (img->palette!=0) triFree(img->palette);
 			triImageList *next = 0;
 			while (img->frames!=0)
 			{
@@ -455,11 +457,10 @@ void deinitenemies()
 				triFree( img->frames );
 				img->frames = next;
 			}
-			triFree(img);
+			triFree(img);*/
 		}
 		triTimerFree( enemies[enemies_stack[i]].timer );
 	}
-	triLogPrint("Here2\r\n");
 	for (i=0;i<MAX_TYPES;i++)
 		triImageFree( enemytypes[i].spritesheet );
 }
@@ -534,29 +535,30 @@ void spawnenemy( triS32 type, triS32 minlevel, triS32 maxlevel, triS32 dx, triS3
 			break;
 	}
 	
+	// Optimize!
 	while (pmap[(triS32)e->y*pwidth + (triS32)e->x]!=0)
 	{
 		e->y += e->vy;
 		e->x += e->vx;
-		if ((triS32)e->y<0)
+		if (e->y<0)
 		{
 			e->y = pheight-1;
 			e->x = rand()%pwidth;
 		}
 		else
-		if ((triS32)e->y>=pheight)
+		if (e->y>=pheight)
 		{
 			e->y = 0;
 			e->x = rand()%pheight;
 		}
 		else
-		if ((triS32)e->x<0)
+		if (e->x<0)
 		{
 			e->x = pwidth-1;
 			e->y = rand()%pheight;
 		}
 		else
-		if ((triS32)e->x>=pwidth)
+		if (e->x>=pwidth)
 		{
 			e->x = 0;
 			e->y = rand()%pheight;
@@ -684,6 +686,8 @@ void updateenemies( triFloat dt )
 				continue;
 			}
 			
+			
+			// Enemy movement AI - search a random neighbour position and check if that gets the enemy closer to it's goal
 			while (1)
 			{
 				e->x = e->lx;
@@ -700,7 +704,7 @@ void updateenemies( triFloat dt )
 					e->x += 1.0f;
 				
 				triFloat dist = (e->x-e->dx)*(e->x-e->dx) + (e->y-e->dy)*(e->y-e->dy);
-				if (e->run==1 && dist>lastdist && (e->x<0 || e->x>=pwidth || e->y<0 || e->y>=pheight || pmap[(triS32)e->y*pwidth+(triS32)e->x]==MAP_UNMOVEABLE))
+				if (e->run==1 && dist>lastdist && (e->x<0 || e->x>=pwidth || e->y<0 || e->y>=pheight /*|| pmap[(triS32)e->y*pwidth+(triS32)e->x]==MAP_UNMOVEABLE*/))
 				{
 					removeenemy( i );
 					// Enemy got away!
@@ -713,9 +717,11 @@ void updateenemies( triFloat dt )
 				if (e->y>=pheight) e->y = pheight-1;*/
 				dist = (e->x-e->dx)*(e->x-e->dx) + (e->y-e->dy)*(e->y-e->dy);
 				
+				// This is a good spot?
 				if ((e->x>=0 && e->x<pwidth && e->y>=0 && e->y<pheight) && ((e->run==0 && dist<=lastdist) || (e->run==1 && dist>=lastdist)) && pmap[(triS32)e->y*pwidth+(triS32)e->x]==MAP_FREE)
 					break;
 				
+				// No? So use the next direction
 				dir = (dir+1)%4;
 				if (dir==lastdir)	// We tried all four possible directions and could not find a good one? (trapped!)
 				{
@@ -763,15 +769,14 @@ void renderenemies( triS32 csx, triS32 csy )
 	while(i<enemies_idx)
 	{
 		enemy* e = &enemies[enemies_stack[i]];
-		triFloat lerp = triTimerPeekDeltaTime( e->timer ) * e->speed;
-		triFloat ex = (e->lx + (e->x-e->lx)*lerp)*csx;
-		triFloat ey = (e->ly + (e->y-e->ly)*lerp)*csy;
-		triS32 exx = (triS32)ex;
-		triS32 eyy = (triS32)ey;
-		triDrawImageAnimation( (exx - (32-csx)/2), (eyy - (24-csy)), e->ani[e->direction] );
+		triFloat dt = triTimerPeekDeltaTime( e->timer );
+		triFloat lerp = dt * e->speed;
+		triLogPrint("Delta: %f\r\n", dt);
+		triLogPrint("Speed: %f\r\n", e->speed);
+		triDrawImageAnimation( (triS32)((e->lx + (e->x-e->lx)*lerp)*csx - (32-csx)*0.5f), (triS32)((e->ly + (e->y-e->ly)*lerp)*csy - (24-csy)), e->ani[e->direction] );
 
 		triFontActivate( verdana10 );
-		triFontPrintf( verdana10, exx, (eyy + 7), 0xFFFFFFFF, "%.1f", e->hp/*, e->freeze, e->wait*/ );
+		triFontPrintf( verdana10, (triS32)((e->lx + (e->x-e->lx)*lerp)*csx), (triS32)((e->ly + (e->y-e->ly)*lerp)*csy + 7), 0xFFFFFFFF, "%.1f", e->hp/*, e->freeze, e->wait*/ );
 		triImageAnimationUpdate( e->ani[e->direction] );
 		i++;
 	}
@@ -807,6 +812,8 @@ void initparticles()
 		bubbles_stack[i] = i;
 		water_stack[i] = i;
 	}
+	bubbles_idx = 0;
+	water_idx = 0;
 }
 
 void hitobject( triS32 n, particle* p )
@@ -957,7 +964,7 @@ void updateparticles( triFloat dt )
 		if (p->force>0.f)
 		{
 			triS32 obj = pmap[(triS32)ny*pwidth+(triS32)nx];
-			if (obj!=0)
+			if (obj!=MAP_FREE)
 			{
 				hitobject( obj, p );
 			}
@@ -1171,6 +1178,8 @@ void main_loop()
 		triFloat lerp = triTimerPeekDeltaTime( player.timer );
 		if (lerp==0) lerp = 0.15f;
 		triDrawImageAnimation( (triS32)((player.lx + (player.x-player.lx)*lerp/0.15f)*csx - (20-csx)/2), (triS32)((player.ly + (player.y-player.ly)*lerp/0.15f)*csy - (27-csy)), player.ani[player.direction] );
+		renderenemies( csx, csy );
+		renderparticles( csx, csy );
 		triDrawImage2( 0, y, foreground );
 		
 		#ifdef DEBUG_CONSOLE
@@ -1188,8 +1197,6 @@ void main_loop()
 			triImageNoTint();
 		}
 		#endif
-		renderenemies( csx, csy );
-		renderparticles( csx, csy );
 		
 		triDrawImage( 480-112, 0, 111, 39,  1, 1, 112, 40, status );
 		triFloat hp = player.hp / (3.f + player.level*2.f);
@@ -1523,11 +1530,11 @@ void splash( triChar* filename )
 {
 	triImage* splash = triImageLoad( filename, TRI_SWIZZLE|TRI_VRAM );
 	triDrawImage2( 0, 0, splash );
-	triSync();
-	triImageFree( splash );
+	sceGuSync(0,2);
 	fadefromcol( 0, 1.0f );
 	sceKernelDelayThread( 25*100*1000 );
 	fadetocol( 0, 1.0f );
+	triImageFree( splash );
 }
 
 
@@ -1691,6 +1698,7 @@ void intro()
 	triImageFree( mudkip2 );
 	triImageFree( title );
 	triImageFree( msgborder );
+	triAt3Stop();
 	triAt3Free();
 }
 
