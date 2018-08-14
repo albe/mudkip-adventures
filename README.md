@@ -7,8 +7,8 @@ Created by Raphael <raphael@fx-world.org>
 
 [Game engine by tri](https://github.com/albe/openTri) - Tomaz, Raphael, InsertWittyName
 
-![Startmenu](https://web.archive.org/web/20111130190741im_/http://www.fx-world.org/images/mudkip2.png)
-![Ingame](https://web.archive.org/web/20111130190741im_/http://www.fx-world.org/images/mudkip1.png)
+![Startmenu](https://github.com/albe/mudkip-adventures/raw/master/mudkip2.png)
+![Ingame](https://github.com/albe/mudkip-adventures/raw/master/mudkip1.png)
 
 
 ## 1. So, I herd u liek Mudkip?!
