@@ -10,6 +10,7 @@ Created by Raphael <raphael@fx-world.org>
 ![Startmenu](https://github.com/albe/mudkip-adventures/raw/master/mudkip2.png)
 ![Ingame](https://github.com/albe/mudkip-adventures/raw/master/mudkip1.png)
 
+Original release post: https://web.archive.org/web/20111130190741/http://www.fx-world.org:80/wordpress/?p=31
 
 ## 1. So, I herd u liek Mudkip?!
 
